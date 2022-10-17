@@ -96,12 +96,63 @@ VALUES(1,2),
 (2,2),
 (3,3),
 (4,1)
+--1
 
 CREATE OR ALTER PROCEDURE usp_GetAllFilmsLanguage @directorId  int
 AS
 SELECT M.Name AS MOVIENAEM, L.Name AS LANGUAGENAME FROM Moviesss AS M
 INNER JOIN Languagessss AS L
-On M.LanguageId=L.Id 
+On M.LanguageId=L.Id
 WHERE M.DirectorId=@directorId
 EXEC usp_GetAllFilmsLanguage @directorId = 1
 
+
+--2
+
+CREATE OR ALTER FUNCTION GetMoviesCountByLanguage (@languageId int=2)
+RETURNS int
+AS
+BEGIN
+RETURN (SELECT COUNT(*) FROM Moviesss AS M  WHERE M.LanguageId=@languageId)
+END
+
+SELECT * FROM Moviesss
+SELECT dbo.GetMoviesCountByLanguage(default)
+
+--3
+
+CREATE OR ALTER PROCEDURE usp_GetAllFilmsDirectors  @genreId  int
+AS
+SELECT M.Name AS MOVIENAME, D.Name AS DirectorNAME FROM MovieWithGenresss AS MG
+INNER JOIN Moviesss AS M ON M.Id=MG.MovieId
+INNER JOIN Directorsss AS D ON M.DirectorId=D.Id
+WHERE MG.GenreId= @genreId
+EXEC usp_GetAllFilmsDirectors  @genreId  = 3
+
+--4
+
+CREATE OR ALTER FUNCTION GetMoviesAndDirectorsbyGenre (@actorId int=2)
+RETURNS BIT
+AS
+BEGIN
+DECLARE @BOOL BIT =0
+if (SELECT COUNT(*) FROM MovieWithActorsss AS MA  WHERE MA.actorId=@actorId)>3 SELECT @BOOL=1
+RETURN @BOOL
+END
+
+SELECT * FROM MovieWithActorsss
+SELECT dbo.GetMoviesAndDirectorsbyGenre(default)
+
+
+CREATE OR ALTER TRIGGER JoinTables ON Moviesss
+AFTER INSERT
+AS
+BEGIN
+	SELECT M.Name,M.Description,M.CoverPhoto, M.DirectorId,M.LanguageId, D.Name ,L.Name  FROM Moviesss AS M
+	INNER JOIN Directorsss AS D ON M.DirectorId=D.Id
+	INNER JOIN Languagessss AS L ON M.LanguageId=L.Id
+END
+INSERT INTO Moviesss
+VALUES('Teen-wolf','actionfilm','true','2','1')
+
+SELECT*FROM Moviesss
